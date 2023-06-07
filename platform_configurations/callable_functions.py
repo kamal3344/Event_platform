@@ -9,15 +9,20 @@ import redis
 import sys
 from platform_configurations import config
 from platform_configurations.setup_data import Redis_server
-logging.basicConfig(filename='D:\\Event_platform\\logs\\configurations.log',filemode='w',level=logging.DEBUG,format="%(asctime)s - %(levelname)s - %(message)s")
+from platform_configurations.loggings import common_log
+logging=common_log()
 Redis_server_obj=Redis_server()
+
+
+
 
 def get_val(): # this function is used to call the camera data from the redis data base
     try:
         redis_connection=redis.Redis(host=config.redis_server["redis_host"],port=config.redis_server["redis_port"],db=config.redis_server["database"])
-        Redis_server_obj.insert_data() # inserting data
         retrieved_data=redis_connection.get(config.redis_server["key"])  # fetching data from redis data base
-
+        if retrieved_data is None:
+            Redis_server_obj.insert_data()  # inserting data
+            retrieved_data = redis_connection.get(config.redis_server["key"])
         # deseralize the data
         retrieved_json_data=json.loads(retrieved_data)
         logging.info(" Data Fetch successfully from the redis Database :")
